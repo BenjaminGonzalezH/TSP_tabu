@@ -15,6 +15,26 @@ def EuclidianDistance(node_A , node_B):
     return np.sqrt((node_B[0] - node_A[1])**2 
                        + (node_B[1]-node_A[1])**2)
 
+def EuclideanDistanceMatrix(NodeList, Tam_Nodes):
+    """
+    EuclideanDistanceMatrix (function) 
+        Input: List with coordenates of
+        each point (location) and tam of the
+        list.
+        Output: Euclidean Distance matrix for all pairs.
+        Description: Calculates Euclidean distance
+        Matrix for each pairs of locations.
+    """
+    Matrix = np.zeros((Tam_Nodes,Tam_Nodes))
+
+    for i in range(0, Tam_Nodes):
+        for j in range(i+1, Tam_Nodes):
+            Matrix[i][j] = (EuclidianDistance(NodeList[i], NodeList[j]))
+            Matrix[j][i] = Matrix[i][j]
+
+    return Matrix
+
+
 def ReadTsp(filename):
     """
     ReadTsp (function)
@@ -42,11 +62,20 @@ def ReadTsp(filename):
         elif(line[0] == 'EOF' or line[0] == 'NODE_COORD_SECTION'):
             break
 
-    # Tomar coordenada.
+    # Take coordenates.
     nodelist = []
     int_dim = int(Dimension)
     for i in range(0, int_dim):
         x,y = infile.readline().strip().split()[1:]
         nodelist.append([float(x), float(y)])
     
-    print(nodelist[-1])
+    # Close input file.
+    infile.close()
+    
+    # Create distance matrix.
+    DistanceMatrix = EuclideanDistanceMatrix(nodelist,int_dim)
+    print(Name)
+    return DistanceMatrix
+
+    
+    
