@@ -1,0 +1,2 @@
+def ObjFun():
+    print("Hi")
