@@ -76,6 +76,3 @@ def ReadTsp(filename):
     DistanceMatrix = EuclideanDistanceMatrix(nodelist,int_dim)
     print(Name)
     return DistanceMatrix
-
-    
-    
