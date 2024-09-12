@@ -8,6 +8,11 @@ import numpy as np
 sys.path.append(os.path.join(os.path.dirname(__file__), 'functions'))
 from ReadTSP import ReadTsp # type: ignore
 from TabuSearch import ObjFun  # type: ignore
+from TabuSearch import first_solution  # type: ignore
+from TabuSearch import get_neighbors # type: ignore
+from TabuSearch import best_neighbor  # type: ignore
+from TabuSearch import TabuSearch  # type: ignore
+
 
 ########## Procedure ##########
 
@@ -24,4 +29,8 @@ for filename in files:
     ReadTsp(filename)
 """
 
-ObjFun()
+DistanceMatrix = np.random.rand(10, 10)
+DistanceMatrix = (DistanceMatrix + DistanceMatrix.T) / 2
+np.fill_diagonal(DistanceMatrix, 0)
+
+TabuSearch()
