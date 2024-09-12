@@ -33,4 +33,7 @@ DistanceMatrix = np.random.rand(10, 10)
 DistanceMatrix = (DistanceMatrix + DistanceMatrix.T) / 2
 np.fill_diagonal(DistanceMatrix, 0)
 
-TabuSearch()
+Vector = first_solution(10)
+Best = TabuSearch(DistanceMatrix,len(Vector),MaxIterations=100, TabuSize=10, numDesireSolution=50,
+               ErrorTolerance=0.001)
+print(ObjFun(Best,DistanceMatrix))
