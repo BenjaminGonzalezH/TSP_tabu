@@ -3,6 +3,7 @@ import sys
 import os
 import numpy as np
 import optuna
+import pickle
 
 ########## Own files ##########
 # Path from the workspace.
@@ -14,6 +15,17 @@ from TabuSearch import get_neighbors # type: ignore
 from TabuSearch import best_neighbor  # type: ignore
 from TabuSearch import TabuSearch  # type: ignore
 
+########## Secundary Functions ##########
+
+# Save the study object to a file using pickle
+def save_study(study, filename):
+    with open(filename, 'wb') as f:
+        pickle.dump(study, f)
+
+# Load the study object from a file using pickle
+def load_study(filename):
+    with open(filename, 'rb') as f:
+        return pickle.load(f)
 
 ########## Procedure ##########
 
@@ -55,11 +67,21 @@ def Parametrization(trial):
 
 
 def main():
-    # Create a study object
-    study = optuna.create_study(direction='minimize')
+    # Create or load a study
+    study_file = 'optuna_study.pkl'
     
-    # Optimize
-    study.optimize(Parametrization, n_trials=50)
+    if os.path.exists(study_file):
+        print("Loading existing study...")
+        study = load_study(study_file)
+    else:
+        print("Creating a new study...")
+        study = optuna.create_study(direction='minimize')
+
+        # Optimize
+        study.optimize(Parametrization, n_trials=4)
+
+        # Save the study after optimization
+        save_study(study, study_file)
 
     # Print the best parameters and the best score
     print('Best parameters:', study.best_params)
