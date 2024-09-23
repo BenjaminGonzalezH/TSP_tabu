@@ -134,7 +134,7 @@ def TabuSearch(DistanceMatrix, AmountNodes, MaxIterations=100, TabuSize=10, numD
         if (len(tabu_list) > TabuSize):
             tabu_list.pop(0)
 
-        # Change best solution(?)
+        # Change best solution(?).
         if (ObjFun(BestNeighbor,DistanceMatrix) <
             ObjFun(BestSolution,DistanceMatrix)):
             BestSolution = BestNeighbor

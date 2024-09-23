@@ -1,7 +1,6 @@
 ########## Libraries ##########
 import sys
 import os
-import numpy as np
 import optuna
 import pickle
 
@@ -10,9 +9,6 @@ import pickle
 sys.path.append(os.path.join(os.path.dirname(__file__), 'functions'))
 from ReadTSP import ReadTsp # type: ignore
 from TabuSearch import ObjFun  # type: ignore
-from TabuSearch import first_solution  # type: ignore
-from TabuSearch import get_neighbors # type: ignore
-from TabuSearch import best_neighbor  # type: ignore
 from TabuSearch import TabuSearch  # type: ignore
 
 ########## Secundary Functions ##########
@@ -26,6 +22,34 @@ def save_study(study, filename):
 def load_study(filename):
     with open(filename, 'rb') as f:
         return pickle.load(f)
+    
+# Defining Parametrization function.
+def Parametrization(trial, Instances):
+    # Define intervals.
+    MaxIterations = trial.suggest_int('MaxIterations', 50, 500)
+    TabuSize = trial.suggest_int('TabuSize', 5, 50)
+    numDesireSolution = trial.suggest_int('numDesireSolution', 10, 100)
+    ErrorTolerance = trial.suggest_loguniform('ErrorTolerance', 1e-5, 1e-1)
+
+    total_obj_value = 0
+    num_instances = len(files)
+
+    for i in range(num_instances):
+        # Run Tabu Search with the parameters from Optuna
+        best_solution = TabuSearch(Instances[i], len(Instances[i]), MaxIterations, 
+                                   TabuSize, numDesireSolution, ErrorTolerance)
+        
+        # Evaluate the quality of the solution
+        objective_value = ObjFun(best_solution, Instances[i])
+
+        # Sum the objective values
+        total_obj_value += objective_value
+
+    # Return the average objective value across all instances
+    return total_obj_value / num_instances
+
+def Parametrization_capsule(Instances):
+    return lambda trial: Parametrization(trial, Instances)
 
 ########## Procedure ##########
 
@@ -37,38 +61,18 @@ for file in Content:
     if(os.path.isfile(os.path.join(Path_T,file))):
         files.append(Path_T+"/"+file)
 
-# Defining Parametrization function.
-def Parametrization(trial):
-    # Define intervals.
-    MaxIterations = trial.suggest_int('MaxIterations', 50, 500)
-    TabuSize = trial.suggest_int('TabuSize', 5, 50)
-    numDesireSolution = trial.suggest_int('numDesireSolution', 10, 100)
-    ErrorTolerance = trial.suggest_loguniform('ErrorTolerance', 1e-5, 1e-1)
-
-    total_obj_value = 0
-    num_instances = len(files)
-
-    for file in files:
-        # Read the TSP instance
-        DistanceMatrix = ReadTsp(file)
-
-        # Run Tabu Search with the parameters from Optuna
-        best_solution = TabuSearch(DistanceMatrix, len(DistanceMatrix), MaxIterations, 
-                                   TabuSize, numDesireSolution, ErrorTolerance)
-        
-        # Evaluate the quality of the solution
-        objective_value = ObjFun(best_solution, DistanceMatrix)
-
-        # Sum the objective values
-        total_obj_value += objective_value
-
-    # Return the average objective value across all instances
-    return total_obj_value / num_instances
-
 
 def main():
+
+    # Load instances.
+    Instances = []
+    for tsp_file in files:
+        DistanceMatrix = ReadTsp(tsp_file)
+        Instances.append(DistanceMatrix)
+    num_instances = len(files)
+
     # Create or load a study
-    study_file = 'optuna_study.pkl'
+    study_file = 'optuna_study_2.pkl'
     
     if os.path.exists(study_file):
         print("Loading existing study...")
@@ -78,7 +82,7 @@ def main():
         study = optuna.create_study(direction='minimize')
 
         # Optimize
-        study.optimize(Parametrization, n_trials=4)
+        study.optimize(Parametrization_capsule(Instances), n_trials=3)
 
         # Save the study after optimization
         save_study(study, study_file)
@@ -92,14 +96,13 @@ def main():
     print("Re-evaluating with best parameters...")
     total_obj_value = 0
 
-    for tsp_file in files:
-        DistanceMatrix = ReadTsp(tsp_file)
-        best_solution = TabuSearch(DistanceMatrix, len(DistanceMatrix), 
+    for i in range(num_instances):
+        best_solution = TabuSearch(Instances[i], len(Instances[i]), 
                                    best_params['MaxIterations'], 
                                    best_params['TabuSize'], 
                                    best_params['numDesireSolution'], 
                                    best_params['ErrorTolerance'])
-        objective_value = ObjFun(best_solution, DistanceMatrix)
+        objective_value = ObjFun(best_solution, Instances[i])
         total_obj_value += objective_value
 
     avg_obj_value = total_obj_value / len(files)
