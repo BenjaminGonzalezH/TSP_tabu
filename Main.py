@@ -1,8 +1,13 @@
 ########## Libraries ##########
 import sys
 import os
+import numpy as np
 import optuna
 import pickle
+
+########## Globals ##########
+max_calls_obj_func = 300000
+obj_func_calls = 0
 
 ########## Own files ##########
 # Path from the workspace.
@@ -36,9 +41,12 @@ def Parametrization(trial, Instances):
 
     for i in range(num_instances):
         # Run Tabu Search with the parameters from Optuna
-        best_solution = TabuSearch(Instances[i], len(Instances[i]), MaxIterations, 
+        best_solution, calls = TabuSearch(Instances[i], len(Instances[i]), MaxIterations, 
                                    TabuSize, numDesireSolution, ErrorTolerance)
         
+        global obj_func_calls
+        obj_func_calls = calls
+
         # Evaluate the quality of the solution
         objective_value = ObjFun(best_solution, Instances[i])
 
@@ -50,6 +58,15 @@ def Parametrization(trial, Instances):
 
 def Parametrization_capsule(Instances):
     return lambda trial: Parametrization(trial, Instances)
+
+def stop_optimization_callback(study, trial):
+    global max_calls_obj_func  # Usar la variable global
+    global obj_func_calls  # Usar la variable global
+
+    # Definir el límite de llamadas a la función objetivo
+    if obj_func_calls >= max_calls_obj_func:
+        print(f"Límite de llamadas a la función objetivo alcanzado: {max_calls_obj_func}. Deteniendo la optimización.")
+        raise optuna.exceptions.OptunaError("Límite de llamadas a la función objetivo alcanzado.")
 
 ########## Procedure ##########
 
@@ -72,7 +89,7 @@ def main():
     num_instances = len(files)
 
     # Create or load a study
-    study_file = 'optuna_study_2.pkl'
+    study_file = 'optuna_study_8.pkl'
     
     if os.path.exists(study_file):
         print("Loading existing study...")
@@ -82,7 +99,10 @@ def main():
         study = optuna.create_study(direction='minimize')
 
         # Optimize
-        study.optimize(Parametrization_capsule(Instances), n_trials=3)
+        try:
+            study.optimize(Parametrization_capsule(Instances), n_trials=10, callbacks=[stop_optimization_callback])
+        except Exception as e:
+            print(f"Error during optimization: {e}")
 
         # Save the study after optimization
         save_study(study, study_file)
@@ -97,7 +117,7 @@ def main():
     total_obj_value = 0
 
     for i in range(num_instances):
-        best_solution = TabuSearch(Instances[i], len(Instances[i]), 
+        best_solution, _ = TabuSearch(Instances[i], len(Instances[i]), 
                                    best_params['MaxIterations'], 
                                    best_params['TabuSize'], 
                                    best_params['numDesireSolution'], 

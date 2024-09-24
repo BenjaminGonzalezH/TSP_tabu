@@ -1,6 +1,9 @@
 ########## Libraries ##########
 import numpy as np
 
+########## Counter ##########
+obj_fun_calls = 0
+
 ########## Functions ##########
 
 def ObjFun(Solution, DistanceMatrix):
@@ -22,6 +25,10 @@ def ObjFun(Solution, DistanceMatrix):
     for i in range(-1,tamVector-1):
         sum = sum + DistanceMatrix[Solution[i]-1][Solution[i+1]-1]
     
+    # Count calls on this function.
+    global obj_fun_calls
+    obj_fun_calls += 1
+
     return sum
 
 
@@ -84,7 +91,6 @@ def best_neighbor(Neighborhood, DistanceMatrix, TabuList):
     
     return Best
 
-
 def TabuSearch(DistanceMatrix, AmountNodes, MaxIterations=100, TabuSize=10, numDesireSolution=50,
                ErrorTolerance=0.001):
     """
@@ -140,5 +146,8 @@ def TabuSearch(DistanceMatrix, AmountNodes, MaxIterations=100, TabuSize=10, numD
             BestSolution = BestNeighbor
 
 
-    return BestSolution
+    global obj_fun_calls
+    print(obj_fun_calls)
+
+    return BestSolution, obj_fun_calls
 
