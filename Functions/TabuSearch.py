@@ -2,6 +2,11 @@
 import numpy as np
 
 ########## Counter ##########
+"""
+    obj_fun_calls
+        Counter of every time that
+        the objective function is called.
+"""
 obj_fun_calls = 0
 
 ########## Functions ##########
@@ -15,6 +20,8 @@ def ObjFun(Solution, DistanceMatrix):
         Description: Calculates the objetctive
         function using permutation vector and
         distance matrix.
+        The TSP objective function is the sum
+        of all edge's cost.
     """
     # Initialization of length of vector and
     # sum.
@@ -39,16 +46,18 @@ def first_solution(AmountNodes):
         Output: Permutation vector.
         Description: Generates first solution.
     """
+    # Random permutation node.
     Vector = np.random.permutation(np.arange(1, AmountNodes))
     return Vector
 
 def get_neighbors(Solution, DesireNum):
     """
     get_neighbors (function)
-        Input: Reference Solution and DesireNum.
-        Output: List of neighbor solutions.
-        Description: Generates a 
-        neighborhood of solutions.
+        Input: Reference Solution and Desire number
+        of neighbor.
+        Output: List of neighbor solutions (neighborhood).
+        Description: Generates a neighborhood 
+        of solutions.
     """
     # Generates solutions.
     neighbors = []
@@ -68,7 +77,8 @@ def get_neighbors(Solution, DesireNum):
 def best_neighbor(Neighborhood, DistanceMatrix, TabuList):
     """
     get_neighbors (function)
-        Input: List of neighbor solutions.
+        Input: Neighborhood, Distance Matrix and
+        Tabu List.
         Output: neighbor  with best improvement 
         in objective function.
         Description: Evaluates Neighborhood
@@ -140,14 +150,14 @@ def TabuSearch(DistanceMatrix, AmountNodes, MaxIterations=100, TabuSize=10, numD
         if (len(tabu_list) > TabuSize):
             tabu_list.pop(0)
 
-        # Change best solution(?).
+        # Change best solution.
         if (ObjFun(BestNeighbor,DistanceMatrix) <
             ObjFun(BestSolution,DistanceMatrix)):
             BestSolution = BestNeighbor
 
-
+    # takes the count of objective function
+    # calls and return it.
     global obj_fun_calls
-    print(obj_fun_calls)
 
     return BestSolution, obj_fun_calls
 

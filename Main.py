@@ -3,9 +3,17 @@ import sys
 import os
 import numpy as np
 import optuna
-import pickle
+import json
+import csv
 
-########## Globals ##########
+########## Global ##########
+"""
+    max_calls_obj_func (global variable)
+        Minimum of calls for end parametrization.
+    obj_func_calls (global variable)
+        Counter of every time that
+        the objective function is called.
+"""
 max_calls_obj_func = 300000
 obj_func_calls = 0
 
@@ -18,24 +26,57 @@ from TabuSearch import TabuSearch  # type: ignore
 
 ########## Secundary Functions ##########
 
-# Save the study object to a file using pickle
-def save_study(study, filename):
-    with open(filename, 'wb') as f:
-        pickle.dump(study, f)
+# Save the study object to a file in txt format (JSON and CSV)
+def save_study_txt(study, best_params_file, trials_file):
+    """
+        save_study_txt (function)
+            Input: Study and files that are gonna be allocated
+            in the path of this file.
+    """
+    # Save the best parameters in a readable text file (JSON format)
+    with open(best_params_file, 'w') as f:
+        json.dump(study.best_params, f, indent=4)
 
-# Load the study object from a file using pickle
-def load_study(filename):
-    with open(filename, 'rb') as f:
-        return pickle.load(f)
+    # Save the entire study's trials as CSV for detailed analysis
+    with open(trials_file, mode='w', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerow(["Trial Number", "Value", "MaxIterations", "TabuSize", "numDesireSolution", "ErrorTolerance"])
+        for trial in study.trials:
+            writer.writerow([trial.number, trial.value, 
+                             trial.params['MaxIterations'], 
+                             trial.params['TabuSize'], 
+                             trial.params['numDesireSolution'], 
+                             trial.params['ErrorTolerance']])
+
+def load_best_params(filename):
+    """
+        load_best_params (functions)
+            Input: File path.
+            Description: Load parameters from a JSON format
+            text file.
+    """
+    # Open text file, read it as JSON file
+    # and allocates the info in a dicctionary.
+    with open(filename, 'r') as f:
+        best_params = json.load(f)
+    return best_params
     
-# Defining Parametrization function.
 def Parametrization(trial, Instances):
+    """
+        Parametrization (Function)
+            Input: trial (parameters for evaluation) and
+            list of matrix (one each instance).
+            Output: Best trial of parameters.
+            Description: Do the parametrization prodecure with
+            every trial.
+    """
     # Define intervals.
     MaxIterations = trial.suggest_int('MaxIterations', 50, 500)
     TabuSize = trial.suggest_int('TabuSize', 5, 50)
     numDesireSolution = trial.suggest_int('numDesireSolution', 10, 100)
     ErrorTolerance = trial.suggest_loguniform('ErrorTolerance', 1e-5, 1e-1)
 
+    # Initializate count of obj function calls.
     total_obj_value = 0
     num_instances = len(files)
 
@@ -44,8 +85,10 @@ def Parametrization(trial, Instances):
         best_solution, calls = TabuSearch(Instances[i], len(Instances[i]), MaxIterations, 
                                    TabuSize, numDesireSolution, ErrorTolerance)
         
+        # Call global variable and update calls count.
         global obj_func_calls
         obj_func_calls = calls
+        print(calls)
 
         # Evaluate the quality of the solution
         objective_value = ObjFun(best_solution, Instances[i])
@@ -57,13 +100,26 @@ def Parametrization(trial, Instances):
     return total_obj_value / num_instances
 
 def Parametrization_capsule(Instances):
+    """
+        Parametrization_capsule (Function)
+            Encapsulate other inputs from principal
+            parametrization function.
+    """
     return lambda trial: Parametrization(trial, Instances)
 
 def stop_optimization_callback(study, trial):
-    global max_calls_obj_func  # Usar la variable global
-    global obj_func_calls  # Usar la variable global
+    """
+        stop_optimization_callback (function)
+            Input: Study (class that allocates the procedure
+            of parametrization) and trial (lastest).
+            Description: function that manage the end of the
+            parametrization procedure.
+    """
+    # Use globals.
+    global max_calls_obj_func
+    global obj_func_calls
 
-    # Definir el límite de llamadas a la función objetivo
+    # Stop critetion.
     if obj_func_calls >= max_calls_obj_func:
         print(f"Límite de llamadas a la función objetivo alcanzado: {max_calls_obj_func}. Deteniendo la optimización.")
         raise optuna.exceptions.OptunaError("Límite de llamadas a la función objetivo alcanzado.")
@@ -80,7 +136,6 @@ for file in Content:
 
 
 def main():
-
     # Load instances.
     Instances = []
     for tsp_file in files:
@@ -89,12 +144,17 @@ def main():
     num_instances = len(files)
 
     # Create or load a study
-    study_file = 'optuna_study_8.pkl'
+    study_file = 'optuna_study.txt'
+    trials_file = 'optuna_trials.csv'
     
-    if os.path.exists(study_file):
+    # files check.
+    if os.path.exists(study_file) and os.path.exists(trials_file):
+        # The files are there.
         print("Loading existing study...")
-        study = load_study(study_file)
+        best_params = load_best_params(study_file)
+        print(best_params)
     else:
+        # New study.
         print("Creating a new study...")
         study = optuna.create_study(direction='minimize')
 
@@ -105,14 +165,16 @@ def main():
             print(f"Error during optimization: {e}")
 
         # Save the study after optimization
-        save_study(study, study_file)
+        save_study_txt(study, study_file, trials_file)
+
+        # After the optimization, assign the best_params
+        best_params = study.best_params
+        print(best_params)
 
     # Print the best parameters and the best score
-    print('Best parameters:', study.best_params)
-    print('Best score:', study.best_value)
+    print('Best parameters:', best_params)
 
     # Optionally, you can re-evaluate with the best parameters on all instances
-    best_params = study.best_params
     print("Re-evaluating with best parameters...")
     total_obj_value = 0
 

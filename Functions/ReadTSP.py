@@ -25,8 +25,10 @@ def EuclideanDistanceMatrix(NodeList, Tam_Nodes):
         Description: Calculates Euclidean distance
         Matrix for each pairs of locations.
     """
+    # Create zeros matrix.
     Matrix = np.zeros((Tam_Nodes,Tam_Nodes))
 
+    # Vector x1 - Vector x2.
     for i in range(0, Tam_Nodes):
         for j in range(i+1, Tam_Nodes):
             Matrix[i][j] = (EuclidianDistance(NodeList[i], NodeList[j]))
