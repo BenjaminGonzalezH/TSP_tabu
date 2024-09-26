@@ -1,4 +1,4 @@
-NAME: mona-lisa100K
+NAME : mona-lisa100K
 COMMENT: TSP art (Bosch)
 TYPE: TSP
 DIMENSION: 100000

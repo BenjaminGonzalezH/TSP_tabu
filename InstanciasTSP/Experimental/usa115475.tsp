@@ -1,4 +1,4 @@
-NAME: usa115475
+NAME : usa115475
 TYPE: TSP
 COMMENT: 115,474 towns and cities in the United States
 COMMENT: Created July 7, 2012, www.math.uwaterloo/tsp/data/usa/

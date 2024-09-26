@@ -48,8 +48,9 @@ def ReadTsp(filename):
     # Input.
     infile = open(filename,'r')
 
-    # Read instance first line.
-    Name = infile.readline().strip().split()[2]
+    # Read instance first line (last element should be
+    # filename).
+    Name = infile.readline().strip().split()[-1]
 
     # Skip comments until DIMENSION.
     for line in infile:
@@ -78,3 +79,46 @@ def ReadTsp(filename):
     DistanceMatrix = EuclideanDistanceMatrix(nodelist,int_dim)
     print(Name)
     return DistanceMatrix
+
+def ReadTsp_Coordenates(filename):
+    """
+    ReadTsp_Coordenates (function)
+        Input: File name.
+        Output: Coordenates list.
+        Description: Read a TSP instance and
+        creates a list that allocates coordenates
+        in files's order.
+    """
+    # Input.
+    infile = open(filename,'r')
+
+    # Read instance first line (last element should be
+    # filename).
+    #Name = infile.readline().strip().split()[-1]
+
+     # Skip comments until DIMENSION.
+    for line in infile:
+        # Reading line.
+        line = infile.readline().strip().split()
+        print(line)
+
+        # Verification of DIMENSION.
+        if(line[0] == 'DIMENSION' or line[0] == 'DIMENSION:'):
+            Dimension = line[-1]
+            print(line)
+
+        # Verification of EOF or Node coordenates secction.
+        elif(line[0] == 'EOF' or line[0] == 'NODE_COORD_SECTION'):
+            break
+    
+    # Take coordenates.
+    nodelist = []
+    int_dim = int(Dimension)
+    for i in range(0, int_dim):
+        x,y = infile.readline().strip().split()[1:]
+        nodelist.append([float(x), float(y)])
+
+    # Close input file.
+    infile.close()
+
+    return nodelist
