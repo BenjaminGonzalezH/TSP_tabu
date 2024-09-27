@@ -74,8 +74,8 @@ else:
 
 Best_SOL = []
 for i in range(len(files)):
-    random = 
-    Best_SOL.append()
+    random = np.random.permutation(np.arange(1, len(Instances[i])))
+    Best_SOL.append(random)
 
 while(True):
     for i in range(len(Instances)):
@@ -86,7 +86,7 @@ while(True):
                                    best_params['ErrorTolerance'])
         
         current_best = ObjFun_C(Best_SOL[i], Instances[i])
-        opponent = ObjFun_C(result[i], Instances[i])
+        opponent = ObjFun_C(result, Instances[i])
         
 
         if(current_best > opponent):
@@ -94,7 +94,11 @@ while(True):
 
         obj_func_calls = calls
         print(obj_func_calls)
-        if(obj_func_calls < max_calls_obj_func):
+        if(obj_func_calls > max_calls_obj_func):
+            flag = 1
             break
 
+    if(flag == 1):
+        break
 
+print(Best_SOL)
