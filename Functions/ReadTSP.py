@@ -94,21 +94,20 @@ def ReadTsp_Coordenates(filename):
 
     # Read instance first line (last element should be
     # filename).
-    #Name = infile.readline().strip().split()[-1]
+    Name = infile.readline().strip().split()[-1]
+    print(Name)
 
      # Skip comments until DIMENSION.
     for line in infile:
         # Reading line.
-        line = infile.readline().strip().split()
-        print(line)
+        broken_line = line.strip().split()
 
         # Verification of DIMENSION.
-        if(line[0] == 'DIMENSION' or line[0] == 'DIMENSION:'):
-            Dimension = line[-1]
-            print(line)
+        if(broken_line[0] == 'DIMENSION' or broken_line[0] == 'DIMENSION:'):
+            Dimension = broken_line[-1]
 
         # Verification of EOF or Node coordenates secction.
-        elif(line[0] == 'EOF' or line[0] == 'NODE_COORD_SECTION'):
+        elif(broken_line[0] == 'EOF' or broken_line[0] == 'NODE_COORD_SECTION'):
             break
     
     # Take coordenates.
