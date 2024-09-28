@@ -71,34 +71,30 @@ if os.path.exists(study_file):
 else:
     print("The file {study_file} not found".format(study_file))
 
+if(os.path.exists("output.txt")):
+    solutions = []
+    with open("output.txt", "r") as file:
+        for line in file:
+            # Convert each line (string) to a list of integers
+            solution = list(map(int, line.strip().split(',')))
+            solutions.append(solution)
 
-Best_SOL = []
-for i in range(len(files)):
-    random = np.random.permutation(np.arange(1, len(Instances[i])))
-    Best_SOL.append(random)
+    for i in range(len(solutions)):
+        result = ObjFun_C(solutions[i],Instances[i])
+        print(result)
 
-while(True):
+else:
+    Best_SOL = []
     for i in range(len(Instances)):
-        result, calls = TabuSearch_C(Instances[i], len(Instances[i]), 
-                                   best_params['MaxIterations'], 
-                                   best_params['TabuSize'], 
-                                   best_params['numDesireSolution'], 
-                                   best_params['ErrorTolerance'])
-        
-        current_best = ObjFun_C(Best_SOL[i], Instances[i])
-        opponent = ObjFun_C(result, Instances[i])
-        
+        result, _ = TabuSearch_C(Instances[i], len(Instances[i]), 
+                                    best_params['MaxIterations'], 
+                                    best_params['TabuSize'], 
+                                    best_params['numDesireSolution'], 
+                                    best_params['ErrorTolerance'])
+    
+        Best_SOL.append(result)
 
-        if(current_best > opponent):
-            Best_SOL[i] = opponent
-
-        obj_func_calls = calls
-        print(obj_func_calls)
-        if(obj_func_calls > max_calls_obj_func):
-            flag = 1
-            break
-
-    if(flag == 1):
-        break
-
-print(Best_SOL)
+    with open("output.txt", "w") as file:
+        for solution in Best_SOL:
+            # Convertir el sub-arreglo a una cadena y escribirlo en el archivo
+            file.write(" ".join(map(str, solution)) + "\n")
